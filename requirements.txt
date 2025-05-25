@@ -13,3 +13,7 @@ langchain_community
 # Embeddings and vector store
 sentence-transformers
 pymilvus
+
+pypdf
+# PDF processing for Windows
+faiss-cpu

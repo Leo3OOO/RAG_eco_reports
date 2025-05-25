@@ -11,6 +11,8 @@ from langchain.embeddings import OpenAIEmbeddings
 import os
 from dotenv import load_dotenv
 from langchain.chains import RetrievalQA
+import streamlit as st
+
 
 def ask_pdf(pdf_file_path, question):
     loader = PyPDFLoader(pdf_file_path)
@@ -32,7 +34,7 @@ def ask_pdf(pdf_file_path, question):
 
     # setting up the llm using the api key from goettingen
     llm = ChatOpenAI(
-        openai_api_key=os.getenv("API_KEY"),
+        api_key=st.secrets["OPENAI_API_KEY"],
         openai_api_base="https://chat-ai.academiccloud.de/v1",
         model_name="meta-llama-3.1-8b-instruct",
         temperature=0.7
