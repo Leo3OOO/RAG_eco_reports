@@ -76,4 +76,5 @@ if prompt := st.chat_input("What is up?"):
         else:
             # This case should ideally not be reached if the logic is correct,
             # as we've just added a user message.
-            # However, 
+            # However, it's a good safeguard.
+            st.warning("No messages to send to the assistant.")
