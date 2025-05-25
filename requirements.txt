@@ -1,0 +1,15 @@
+streamlit
+docling
+
+# LangChain modular components
+langchain-core>=0.1.41
+langchain-text-splitters>=0.0.1
+langchain-huggingface>=0.0.4
+langchain-milvus>=0.0.4
+langchain_openai
+langchain
+langchain_community
+
+# Embeddings and vector store
+sentence-transformers
+pymilvus

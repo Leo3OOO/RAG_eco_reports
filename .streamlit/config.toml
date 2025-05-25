@@ -1,0 +1,85 @@
+[server]
+enableStaticServing = true
+
+[theme]
+primaryColor = "#bb5a38"
+backgroundColor = "#f4f3ed"
+secondaryBackgroundColor = "#ecebe3"
+textColor = "#3d3a2a"
+linkColor = "#3d3a2a"
+borderColor = "#d3d2ca"
+showWidgetBorder = true
+baseRadius = "0.6rem"
+font = "Styrene B"
+codeFont = "Fira Code"
+codeBackgroundColor = "#ecebe4"
+showSidebarBorder = true
+
+[theme.sidebar]
+backgroundColor = "#e8e7dd"
+secondaryBackgroundColor = "#ecebe3"
+
+[[theme.fontFaces]]
+url = "app/static/FiraCode-VF.ttf"
+family = "Fira Code"
+
+[[theme.fontFaces]]
+url = "app/static/styrene/StyreneA-Thin.otf"
+family = "Styrene A"
+weight = 100
+
+[[theme.fontFaces]]
+url = "app/static/styrene/StyreneA-Light.otf"
+family = "Styrene A"
+weight = 300
+
+[[theme.fontFaces]]
+url = "app/static/styrene/StyreneA-Regular.otf"
+family = "Styrene A"
+weight = 400
+
+[[theme.fontFaces]]
+url = "app/static/styrene/StyreneA-Medium.otf"
+family = "Styrene A"
+weight = 500
+
+[[theme.fontFaces]]
+url = "app/static/styrene/StyreneA-Bold.otf"
+family = "Styrene A"
+weight = 700
+
+[[theme.fontFaces]]
+url = "app/static/styrene/StyreneA-Black.otf"
+family = "Styrene A"
+weight = 900
+
+
+[[theme.fontFaces]]
+url = "app/static/Styrene_B_Family/StyreneB-Thin-Trial.otf"
+family = "Styrene B"
+weight = 100
+
+[[theme.fontFaces]]
+url = "app/static/Styrene_B_Family/StyreneB-Light-Trial.otf"
+family = "Styrene B"
+weight = 300
+
+[[theme.fontFaces]]
+url = "app/static/Styrene_B_Family/StyreneB-Regular-Trial.otf"
+family = "Styrene B"
+weight = 400
+
+[[theme.fontFaces]]
+url = "app/static/Styrene_B_Family/StyreneB-Medium-Trial.otf"
+family = "Styrene B"
+weight = 500
+
+[[theme.fontFaces]]
+url = "app/static/Styrene_B_Family/StyreneB-Bold-Trial.otf"
+family = "Styrene B"
+weight = 700
+
+[[theme.fontFaces]]
+url = "app/static/Styrene_B_Family/StyreneB-Black-Trial.otf"
+family = "Styrene B"
+weight = 900
