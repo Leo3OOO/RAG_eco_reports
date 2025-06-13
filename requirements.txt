@@ -1,0 +1,29 @@
+# Vermeidet Inkompatibilitäten mit NumPy 2.x
+numpy<2.0
+
+# Wichtig für Transformers und LLMs
+torch
+transformers
+
+# Für wissenschaftliche Operationen (z. B. linear_sum_assignment)
+scipy
+
+# Langchain Kern und Erweiterungen
+langchain
+langchain-openai
+langchain-docling
+langchain-text-splitters
+langchain-community
+
+# PDF-Handling
+pdfminer.six
+
+# Für FAISS Vektorspeicher
+faiss-cpu
+
+# .env-Dateien laden
+python-dotenv
+
+# Falls du Jupyter oder Visualisierung brauchst (optional)
+jupyter
+matplotlib
