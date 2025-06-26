@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-
-print("hello world")
-
 import os
 import json
 from dotenv import load_dotenv
@@ -17,10 +13,11 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 from langchain_docling.loader import DoclingLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain_core.embeddings import Embeddings
 from sentence_transformers import SentenceTransformer
+from langchain_community.vectorstores.utils import filter_complex_metadata
 
 # OpenAI client
 from openai import OpenAI
@@ -88,22 +85,22 @@ class LocalEmbeddings(Embeddings):
 def embed_and_store(texts, index_path=None):
     load_dotenv()
     embeddings = LocalEmbeddings()
-    # Always print number of texts and a sample
+    persist_dir = index_path if index_path else "chroma_db"
     print(f"[embed_and_store] Number of texts to embed: {len(texts)}")
     if texts:
         print(f"[embed_and_store] Sample text: {texts[0].page_content[:200]}")
-    # If index_path is provided and exists, load from disk
-    if index_path and os.path.exists(index_path):
-        print(f"Loading FAISS index from {index_path}")
-        vector_store = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
-        print(f"[embed_and_store] Loaded FAISS index. Index size: {vector_store.index.ntotal if hasattr(vector_store, 'index') else 'unknown'}")
-    else:
-        print("Creating new FAISS index and embedding documents (local model)...")
-        vector_store = FAISS.from_documents(texts, embedding=embeddings)
-        if index_path:
-            print(f"Saving FAISS index to {index_path}")
-            vector_store.save_local(index_path)
-        print(f"[embed_and_store] Created FAISS index. Index size: {vector_store.index.ntotal if hasattr(vector_store, 'index') else 'unknown'}")
+    # Filter complex metadata for Chroma compatibility
+    for doc in texts:
+        if hasattr(doc, 'metadata') and isinstance(doc.metadata, dict):
+            # Only keep simple types in metadata
+            doc.metadata = {k: v for k, v in doc.metadata.items() if isinstance(v, (str, int, float, bool, type(None)))}
+    # Use Chroma for persistent, disk-backed vector store
+    vector_store = Chroma.from_documents(
+        texts,
+        embedding=embeddings,
+        persist_directory=persist_dir
+    )
+    print(f"[embed_and_store] Chroma DB created at {persist_dir}")
     return vector_store
 
 
