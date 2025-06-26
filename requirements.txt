@@ -27,3 +27,7 @@ python-dotenv
 # Falls du Jupyter oder Visualisierung brauchst (optional)
 jupyter
 matplotlib
+
+# Embeddings and vector store
+sentence-transformers
+pymilvus
