@@ -17,6 +17,7 @@ langchain-community
 
 # PDF-Handling
 pdfminer.six
+pypdf
 
 # Für FAISS Vektorspeicher
 faiss-cpu
