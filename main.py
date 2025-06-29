@@ -5,6 +5,7 @@ import os
 import json
 
 st.title("Eco Report RAG Chat")
+st.markdown("""Please do not upload any sensitive or confidential documents. or provide any personal information.""")
 
 # Set a default model
 if "openai_model" not in st.session_state:
