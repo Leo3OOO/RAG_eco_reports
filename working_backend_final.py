@@ -191,7 +191,7 @@ def chat_loop(client, retriever):
     messages: list[ChatCompletionMessageParam] = [
         ChatCompletionSystemMessageParam(
             role="system",
-            content="You are a helpful assistant. Use the provided CONTEXT to answer the user's questions."
+            content="You are a helpful assistant. Use the provided PDF to answer the user's questions."
         )
     ]
     print("Type 'exit' to quit.")
