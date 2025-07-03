@@ -8,9 +8,9 @@ from pdf2image import convert_from_bytes
 from PIL import Image
 import io
 
-st.set_page_config(layout="wide")
-st.title("Eco Report RAG Chat")
-st.markdown("""Please do not upload any sensitive or confidential documents. or provide any personal information.""")
+st.set_page_config(layout="wide", page_title="Chat with PDF", page_icon=":material/temp_preferences_eco:")
+st.title(":green[**Eco Report RAG Chat** :material/temp_preferences_eco:]", width="stretch")
+st.markdown("""*Please do not upload any sensitive or confidential documents, or provide any personal information.*""")
 
 # Initialize chat history and past chats
 if "messages" not in st.session_state:
@@ -29,15 +29,15 @@ def display_past_chats():
             pdf_bytes = chat.get("pdf_bytes")
             if pdf_bytes:
                 try:
-                    images = convert_from_bytes(pdf_bytes, first_page=1, last_page=1, size=(120, 160))
+                    images = convert_from_bytes(pdf_bytes, first_page=1, last_page=1, size=(360, 480))
                     buf = io.BytesIO()
                     images[0].save(buf, format="PNG")
                     buf.seek(0)
-                    st.sidebar.image(buf, width=80)
+                    st.sidebar.image(buf)
                 except Exception:
                     st.sidebar.info("[Preview error]")
             # Use markdown for clickable title
-            if st.sidebar.button(f"{pdf_name}", key=f"past_chat_{idx}"):
+            if st.sidebar.button(f"{pdf_name}", key=f"past_chat_{idx}", use_container_width=True):
                 # Save current chat before switching, if it exists and has a PDF
                 if st.session_state.get("messages") and st.session_state.get("pdf_bytes"):
                     current_pdf_name = st.session_state.get("pdf_name")
@@ -108,7 +108,8 @@ def new_chat():
     for key in ["messages", "retriever", "llm", "pdf_path", "pdf_name", "pdf_file", "pdf_bytes", "index_path"]:
         if key in st.session_state:
             del st.session_state[key]
-    st.rerun()
+    #this is a no-op for some reason...
+    #st.rerun()
 
 if "pdf_path" in st.session_state:
     st.button("New Chat", on_click=new_chat, use_container_width=True)
@@ -132,14 +133,14 @@ else:
 col1, col2 = st.columns([col_widths[0], col_widths[1]])
 
 with col1:
-    # Use the callback for the button
-    st.button(
-        f"Zoom: {'smaller' if st.session_state['pdf_wide'] else 'bigger'}",
-        icon=icon,
-        use_container_width=True,
-        on_click=toggle_pdf_wide
-    )
     if uploaded_file is not None:
+        # Use the callback for the button
+        st.button(
+            f"Zoom: {'smaller' if st.session_state['pdf_wide'] else 'bigger'}",
+            icon=icon,
+            use_container_width=True,
+            on_click=toggle_pdf_wide
+        )
         pdf_bytes = uploaded_file.read()
         st.session_state["pdf_bytes"] = pdf_bytes
         pdf_viewer.pdf_viewer(pdf_bytes, width="100%", height=pdf_height)
@@ -224,7 +225,7 @@ with col2:
             icon=":material/download:"
         )
 
-    # Display chat history only once
+    # Display chat history
     for message in st.session_state.get("messages", []):
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
