@@ -34,7 +34,7 @@ import time
 from langchain_community.document_loaders import PyPDFLoader
 
 # load pdf and split 
-def read_and_split_pdf(file_path, chunk_size=2000, chunk_overlap=200):
+def read_and_split_pdf(file_path, chunk_size=1000, chunk_overlap=200):
     from langchain_text_splitters import RecursiveCharacterTextSplitter
     import psutil, time
 
