@@ -1,0 +1,21 @@
+[server]
+enableStaticServing = true
+
+[[theme.fontFaces]]
+family="noto-serif"
+url="app/static/NotoSerif-Italic-VariableFont_wdth,wght.ttf"
+style="italic"
+[[theme.fontFaces]]
+family="noto-serif"
+url="app/static/NotoSerif-VariableFont_wdth,wght.ttf"
+style="normal"
+weight=700
+
+[theme]
+font="noto-sans"
+primaryColor="#0b5b49"
+backgroundColor="#fff8e7"
+secondaryBackgroundColor="#f5e99d"
+
+[theme.sidebar]
+primaryColor="darkGoldrod"
