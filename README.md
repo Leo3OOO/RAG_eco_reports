@@ -1,39 +1,53 @@
+### 📦 Benutzung
 
-### Benutzung 
+---
 
-### Schritte zum Funktionieren: 
+### 🛠️ Schritte zum Funktionieren
 
-1. Clone unser Git-Reposetory in einen von die gewählten Ordner und navigiere in den erstellten Ordner mit cd "folder_name"
+1. **Repository klonen**  
+Klone unser Git-Repository in einen gewünschten Ordner und navigiere anschließend in diesen Ordner:
 
-2. Bei Mac oder Linux: Folgenden Befehl ins Terminal(geleitet zum gewählten Ordner) eingeben: 
+  ```bash cd "folder_name" ```
 
-chmod +x setup_env.sh
-./setup_env.sh
-source newenv/bin/activate
+2.	**Setup (für Mac oder Linux)**
+Führe im Terminal (im gewählten Ordner) folgende Befehle aus:
 
-2. Eine Datei mit dem Namen ".env" erstellen und den passenden API key reinschreiben
-   
-API_KEY='dein Eintag'
+- ```chmod +x setup_env.sh``` 
 
- -> dann muss diese Datei gespeichert werden
+- ```./setup_env.sh```
 
-### Schritte zum ausführen der Datei im Moment: 
+- ```source newenv/bin/activate```
 
-Terminal in den passenden Ordner leiten 
 
-in das Terminal schreiben: 
+3. **.env-Datei erstellen**
+Erstelle eine Datei mit dem Namen ```.env``` und füge den API-Key wie folgt ein:
 
-python working_backend.py
+```API_KEY='dein Eintrag'```
 
-### Wiederholte Benutzung
+Speichere anschließend die Datei.
 
-### Wenn man es wieder öffnet muss das Virtual Environment neu aktiviert werden, dies geht mit: 
+---
 
-1. Terminal in den passenden Ordner leiten 
+### 🚀 Schritte zum Ausführen der Datei (aktuelle Nutzung)
+	1.	Im Terminal zu dem Passenden Ordner navigieren
+	2.	Folgenden Befehl im Terminal ausführen:
+```python working_backend.py```
 
-2. In das Terminal schreiben (aktivieren des Virtual Environment + Code ausführen): 
+### 🔁 Wiederholte Benutzung
 
-source newenv/bin/activate
-python working_backend.py
+Wenn du das Projekt erneut öffnen möchtest, musst du das Virtual Environment neu aktivieren:
+	1.	Terminal in den passenden Ordner leiten
+	2.	Virtual Environment aktivieren und Code ausführen:
 
+```source newenv/bin/activate```
+```python working_backend.py```
+
+
+--- 
+
+### 🗂️ Trello
+
+Link to the Trello Board
+
+https://trello.com/b/8bUm8R9D/ai-application-project
 
