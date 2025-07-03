@@ -4,23 +4,120 @@ import tempfile
 import os
 import json
 import streamlit_pdf_viewer as pdf_viewer
+from pdf2image import convert_from_bytes
+from PIL import Image
+import io
 
 st.set_page_config(layout="wide")
 st.title("Eco Report RAG Chat")
 st.markdown("""Please do not upload any sensitive or confidential documents. or provide any personal information.""")
 
-# Initialize chat history
+# Initialize chat history and past chats
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "past_chats" not in st.session_state:
+    st.session_state.past_chats = []
 
-uploaded_file = st.file_uploader("Upload a PDF report", type=["pdf"])
+# Sidebar for past chats with mini PDF previews
+def display_past_chats():
+    st.sidebar.title("Past Chats")
+    if st.session_state.past_chats:
+        for i, chat in enumerate(st.session_state.past_chats[::-1]):
+            idx = len(st.session_state.past_chats) - 1 - i
+            pdf_name = chat.get("pdf_name", f"Chat {idx+1}")
+            # Generate thumbnail from pdf_bytes
+            pdf_bytes = chat.get("pdf_bytes")
+            if pdf_bytes:
+                try:
+                    images = convert_from_bytes(pdf_bytes, first_page=1, last_page=1, size=(120, 160))
+                    buf = io.BytesIO()
+                    images[0].save(buf, format="PNG")
+                    buf.seek(0)
+                    st.sidebar.image(buf, width=80)
+                except Exception:
+                    st.sidebar.info("[Preview error]")
+            # Use markdown for clickable title
+            if st.sidebar.button(f"{pdf_name}", key=f"past_chat_{idx}"):
+                # Save current chat before switching, if it exists and has a PDF
+                if st.session_state.get("messages") and st.session_state.get("pdf_bytes"):
+                    current_pdf_name = st.session_state.get("pdf_name")
+                    new_chat_data = {
+                        "messages": st.session_state["messages"].copy(),
+                        "pdf_bytes": st.session_state.get("pdf_bytes"),
+                        "pdf_name": current_pdf_name,
+                        "index_path": st.session_state.get("index_path"),
+                        "pdf_path": st.session_state.get("pdf_path"),
+                        "retriever": st.session_state.get("retriever"),
+                        "llm": st.session_state.get("llm"),
+                        "pdf_file": st.session_state.get("pdf_file"),
+                    }
+                    # Update if pdf_name exists, else append
+                    found = False
+                    for j, past in enumerate(st.session_state.past_chats):
+                        if past.get("pdf_name") == current_pdf_name:
+                            st.session_state.past_chats[j] = new_chat_data
+                            found = True
+                            break
+                    if not found:
+                        st.session_state.past_chats.append(new_chat_data)
+                # Restore all chat state
+                st.session_state["messages"] = chat["messages"].copy()
+                st.session_state["pdf_bytes"] = chat.get("pdf_bytes")
+                st.session_state["pdf_name"] = chat.get("pdf_name")
+                st.session_state["index_path"] = chat.get("index_path")
+                st.session_state["pdf_path"] = chat.get("pdf_path")
+                st.session_state["retriever"] = chat.get("retriever")
+                st.session_state["llm"] = chat.get("llm")
+                st.session_state["pdf_file"] = chat.get("pdf_file")
+                st.rerun()
+    else:
+        st.sidebar.info("No past chats yet.")
+
+display_past_chats()
+
+# Show uploader only if no PDF is uploaded yet
+if "pdf_path" not in st.session_state:
+    uploaded_file = st.file_uploader("Upload a PDF report", type=["pdf"])
+else:
+    uploaded_file = None
+
+# New Chat button (shows after PDF is uploaded)
+def new_chat():
+    # Save current chat to past chats if any messages exist and a PDF is uploaded
+    if st.session_state.get("messages") and st.session_state.get("pdf_bytes"):
+        current_pdf_name = st.session_state.get("pdf_name")
+        new_chat_data = {
+            "messages": st.session_state["messages"].copy(),
+            "pdf_bytes": st.session_state.get("pdf_bytes"),
+            "pdf_name": current_pdf_name,
+            "index_path": st.session_state.get("index_path"),
+            "pdf_path": st.session_state.get("pdf_path"),
+            "retriever": st.session_state.get("retriever"),
+            "llm": st.session_state.get("llm"),
+            "pdf_file": st.session_state.get("pdf_file"),
+        }
+        found = False
+        for j, past in enumerate(st.session_state.past_chats):
+            if past.get("pdf_name") == current_pdf_name:
+                st.session_state.past_chats[j] = new_chat_data
+                found = True
+                break
+        if not found:
+            st.session_state.past_chats.append(new_chat_data)
+    # Clear session state for new chat
+    for key in ["messages", "retriever", "llm", "pdf_path", "pdf_name", "pdf_file", "pdf_bytes", "index_path"]:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.rerun()
+
+if "pdf_path" in st.session_state:
+    st.button("New Chat", on_click=new_chat, use_container_width=True)
 
 def toggle_pdf_wide():
     st.session_state["pdf_wide"] = not st.session_state["pdf_wide"]
 
 if "pdf_wide" not in st.session_state:
     st.session_state["pdf_wide"] = False
-
 
 # Now set icon and col_widths based on the (possibly updated) state
 if st.session_state["pdf_wide"]:
@@ -34,9 +131,8 @@ else:
 
 col1, col2 = st.columns([col_widths[0], col_widths[1]])
 
-
 with col1:
-# Use the callback for the button
+    # Use the callback for the button
     st.button(
         f"Zoom: {'smaller' if st.session_state['pdf_wide'] else 'bigger'}",
         icon=icon,
@@ -45,8 +141,11 @@ with col1:
     )
     if uploaded_file is not None:
         pdf_bytes = uploaded_file.read()
+        st.session_state["pdf_bytes"] = pdf_bytes
         pdf_viewer.pdf_viewer(pdf_bytes, width="100%", height=pdf_height)
         uploaded_file.seek(0)
+    elif st.session_state.get("pdf_bytes"):
+        pdf_viewer.pdf_viewer(st.session_state["pdf_bytes"], width="100%", height=pdf_height)
 
 with col2:
     if uploaded_file is not None and "retriever" not in st.session_state:
@@ -55,6 +154,8 @@ with col2:
             pdf_path = tmp_file.name
         st.session_state["pdf_path"] = pdf_path
         st.session_state["pdf_name"] = uploaded_file.name  # Store original filename
+        st.session_state["pdf_file"] = pdf_path
+        st.session_state["index_path"] = os.path.join("faiss_indexes", os.path.splitext(uploaded_file.name)[0])
         st.success(f"Uploaded: {uploaded_file.name}")
 
         # Create a unique index path for this PDF
