@@ -18,6 +18,7 @@ langchain-community
 # PDF-Handling
 pdfminer.six
 pypdf
+streamlit-pdf-viewer
 
 # Für FAISS Vektorspeicher
 faiss-cpu
@@ -33,3 +34,7 @@ matplotlib
 sentence-transformers
 pymilvus
 chromadb
+
+#pdf thumbnail generation
+pdf2image
+Pillow
