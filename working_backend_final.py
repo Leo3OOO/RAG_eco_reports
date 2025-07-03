@@ -3,7 +3,7 @@ import json
 from dotenv import load_dotenv
 import multiprocessing as mp
 mp.set_start_method("spawn", force=True)
-
+# environment configurations
 # suppress tokenizers parallelism warning
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # allow duplicate OpenMP runtimes
@@ -33,27 +33,34 @@ from openai.types.chat import (
 import time
 from langchain_community.document_loaders import PyPDFLoader
 
+# load pdf and split 
 def read_and_split_pdf(file_path, chunk_size=1500, chunk_overlap=100):
     from langchain_text_splitters import RecursiveCharacterTextSplitter
     import psutil, time
 
+    # loads pdf using pypdf loader (docling caused Memory problems)
     print("📄 Loading PDF (lightweight)...")
     start = time.time()
     loader = PyPDFLoader(file_path)
     documents = loader.load()
-    
+
+    # splitting 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
     )
+
+    # chunking in order increase speed and reduce RAM burdon
     print(f"📦 Splitting PDF into chunks of {chunk_size} characters with {chunk_overlap} overlap...")
     texts = splitter.split_documents(documents)
-
+    
+    # provides user information about compute time and RAM (we had some issues with this, thats why we were quite thorough in this step)
     print(f"📦 Chunks: {len(texts)}")
     print(f"🧠 RAM usage: {psutil.virtual_memory().used / 1e9:.2f} GB")
     print(f"⏱️ Time: {time.time() - start:.2f} seconds")
     return texts
 
+# Embeddings class for AcademicCloud API
 class APIEmbeddings(Embeddings):
     def __init__(self, api_key, api_base="https://chat-ai.academiccloud.de/v1", model="e5-mistral-7b-instruct", batch_size=32):
         self.client = OpenAI(api_key=api_key, base_url=api_base)
@@ -79,6 +86,8 @@ class APIEmbeddings(Embeddings):
     def embed_query(self, text):
         return self.embed_documents([text])[0]
 
+# local Embeddings class for AcademicCloud API
+# we can switch between local and cloud embeddings in case the computer is too slow
 class LocalEmbeddings(Embeddings):
     def __init__(self, model_name="all-MiniLM-L6-v2", batch_size=32):
         self.model = SentenceTransformer(model_name)
@@ -96,9 +105,9 @@ class LocalEmbeddings(Embeddings):
     def embed_query(self, text):
         return self.embed_documents([text])[0]
 
-
+# vectorize texts and store in chroma db
 def embed_and_store(texts, index_path=None):
-    load_dotenv()
+    load_dotenv() # loads API key incase not yet done
     embeddings = LocalEmbeddings()
     persist_dir = index_path if index_path else "chroma_db"
     print(f"[embed_and_store] Number of texts to embed: {len(texts)}")
@@ -117,6 +126,7 @@ def embed_and_store(texts, index_path=None):
         persist_directory=persist_dir
     )
 
+    # adding embeddings in batches
     batch_size = embeddings.batch_size
     total = len(texts)
 
@@ -129,11 +139,12 @@ def embed_and_store(texts, index_path=None):
     print(f"[embed_and_store] Chroma DB created at {persist_dir}")
     return vector_store
 
+# setting retriever from vector database
 def set_retriever(vector_store):
-    """Return simple retriever from FAISS store"""
+    """Return simple retriever from Chroma store"""
     return vector_store.as_retriever()
 
-
+# initialising llm
 def set_llm():
     load_dotenv()
     api_key = os.getenv("API_KEY")
@@ -143,15 +154,16 @@ def set_llm():
     return ChatOpenAI(
         api_key=api_key,
         base_url="https://chat-ai.academiccloud.de/v1",
-        model="meta-llama-3.1-8b-rag",
-        temperature=0.4
+        model="meta-llama-3.1-8b-rag", # choosing model 
+        temperature=0.4 # lowering temperature to reduce randomness
     )
 
-
+# extracting info and creating json
 def extract_info_as_json(llm, retriever, pdf_name):
     """Extract structured info from the PDF using RAG and return JSON."""
     qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
 
+    # we decided to write a short prompt for each of the json keys. the idea is for the llm to give a very short answer so that the information is clearly visible
     schema_questions = {
         "CO2": "What does the document say about CO2 emissions? please be as concise as possible",
         "NOX": "What information is provided about NOX emissions? please be as concise as possible",
@@ -174,7 +186,7 @@ def extract_info_as_json(llm, retriever, pdf_name):
             result[key] = f"Error: {str(e)}"
     return result
 
-
+# creating chat loop and conversational awareness
 def chat_loop(client, retriever):
     messages: list[ChatCompletionMessageParam] = [
         ChatCompletionSystemMessageParam(
