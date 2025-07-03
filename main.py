@@ -34,8 +34,8 @@ def display_past_chats():
                     images[0].save(buf, format="PNG")
                     buf.seek(0)
                     st.sidebar.image(buf)
-                except Exception:
-                    st.sidebar.info("[Preview error]")
+                except Exception as e:
+                    st.sidebar.info(f"[Preview error]: {e}")
             # Use markdown for clickable title
             if st.sidebar.button(f"{pdf_name}", key=f"past_chat_{idx}", use_container_width=True):
                 # Save current chat before switching, if it exists and has a PDF
