@@ -52,6 +52,9 @@ def read_and_split_pdf(file_path, chunk_size=1000, chunk_overlap=200):
 
     # chunking in order increase speed and reduce RAM burdon
     print(f"📦 Splitting PDF into chunks of {chunk_size} characters with {chunk_overlap} overlap...")
+    for doc in documents:
+        page = doc.metadata.get("page", "N/A")
+        doc.page_content = f"(Page {page})\n{doc.page_content}"
     texts = splitter.split_documents(documents)
     
     # provides user information about compute time and RAM (we had some issues with this, thats why we were quite thorough in this step)
@@ -139,10 +142,20 @@ def embed_and_store(texts, index_path=None):
     print(f"[embed_and_store] Chroma DB created at {persist_dir}")
     return vector_store
 
-# setting retriever from vector database
-def set_retriever(vector_store):
-    """Return simple retriever from Chroma store"""
-    return vector_store.as_retriever()
+def set_retriever(vector_store, k=10, use_mmr=True):
+    """
+    Return a retriever from the Chroma store with configurable settings.
+    """
+    search_type = "mmr" if use_mmr else "similarity"
+    
+    return vector_store.as_retriever(
+        search_type=search_type,
+        search_kwargs={
+            "k": k,
+            # Optional: adjust lambda_mult if using MMR (default=0.5)
+            # "lambda_mult": 0.7,
+        }
+    )
 
 # initialising llm
 def set_llm():
@@ -154,8 +167,9 @@ def set_llm():
     return ChatOpenAI(
         api_key=api_key,
         base_url="https://chat-ai.academiccloud.de/v1",
-        model="llama-3.1-sauerkrautlm-70b-instruct", # choosing model 
-        temperature=0.4 # lowering temperature to reduce randomness
+        model="llama-3.1-sauerkrautlm-70b-instruct", # choosing model
+        temperature=0.4,  # lowering temperature to reduce randomness
+        streaming=True
     )
 
 # extracting info and creating json
@@ -185,28 +199,3 @@ def extract_info_as_json(llm, retriever, pdf_name):
         except Exception as e:
             result[key] = f"Error: {str(e)}"
     return result
-
-# creating chat loop and conversational awareness
-def chat_loop(client, retriever):
-    messages: list[ChatCompletionMessageParam] = [
-        ChatCompletionSystemMessageParam(
-            role="system",
-            content="You are a helpful assistant. Use the provided PDF to answer the user's questions."
-        )
-    ]
-    print("Type 'exit' to quit.")
-    while True:
-        question = input("You: ")
-        if question.strip().lower() == "exit":
-            break
-        context = "\n\n".join(doc.page_content for doc in retriever.get_relevant_documents(question))
-        messages.append(ChatCompletionSystemMessageParam(role="system", content=f"CONTEXT:\n{context}"))
-        messages.append(ChatCompletionUserMessageParam(role="user", content=question))
-        chat_completion = client.chat.completions.create(
-            messages=messages,
-            model="meta-llama-3.1-8b-rag",
-            temperature=0.4
-        )
-        answer = chat_completion.choices[0].message.content or ""
-        messages.append(ChatCompletionAssistantMessageParam(role="assistant", content=answer))
-        print(f"AI: {answer}")
