@@ -38,10 +38,11 @@ def render_pdf_thumbnail(pdf_bytes, preview_width=180):
 def display_past_chats():
     st.sidebar.title("Past Chats")
     if st.session_state.past_chats:
+        # Show past chats in reverse order (newest first)
         for i, chat in enumerate(st.session_state.past_chats[::-1]):
             idx = len(st.session_state.past_chats) - 1 - i
             pdf_name = chat.get("pdf_name", f"Chat {idx+1}")
-            # Generate thumbnail from pdf_bytes
+            # Show PDF thumbnail if available
             pdf_bytes = chat.get("pdf_bytes")
             if pdf_bytes:
                 try:
@@ -49,9 +50,9 @@ def display_past_chats():
                     st.sidebar.image(buf)
                 except Exception as e:
                     st.sidebar.info(f"[Preview error]: {e}")
-            # Use markdown for clickable title
+            # Button to load this past chat
             if st.sidebar.button(f"{pdf_name}", key=f"past_chat_{idx}", use_container_width=True):
-                # Save current chat before switching, if it exists and has a PDF
+                # Save current chat before switching
                 if st.session_state.get("messages") and st.session_state.get("pdf_bytes"):
                     current_pdf_name = st.session_state.get("pdf_name")
                     new_chat_data = {
@@ -64,7 +65,7 @@ def display_past_chats():
                         "llm": st.session_state.get("llm"),
                         "pdf_file": st.session_state.get("pdf_file"),
                     }
-                    # Update if pdf_name exists, else append
+                    # Update or append this chat in past_chats
                     found = False
                     for j, past in enumerate(st.session_state.past_chats):
                         if past.get("pdf_name") == current_pdf_name:
@@ -73,7 +74,7 @@ def display_past_chats():
                             break
                     if not found:
                         st.session_state.past_chats.append(new_chat_data)
-                # Restore all chat state
+                # Restore all chat state for selected chat
                 st.session_state["messages"] = chat["messages"].copy()
                 st.session_state["pdf_bytes"] = chat.get("pdf_bytes")
                 st.session_state["pdf_name"] = chat.get("pdf_name")
@@ -180,6 +181,7 @@ with col1:
 
 with col2:
     if uploaded_file is not None and "retriever" not in st.session_state:
+        # Handle new PDF upload and build knowledge base
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
             tmp_file.write(uploaded_file.read())
             pdf_path = tmp_file.name
@@ -217,6 +219,7 @@ with col2:
     # Only show chat input after retriever/llm are ready
     if "retriever" in st.session_state and "llm" in st.session_state:
 
+        # --- Chat memory and chain setup ---
         # Set up memory (persisted in session state)
         if "memory" not in st.session_state:
             st.session_state.memory = ConversationBufferMemory(
@@ -234,33 +237,37 @@ with col2:
             )
             st.session_state.messages = []
 
-        # Chat input and response (displayed above chat history)
+        # --- Chat input and response (displayed above chat history) ---
         prompt = st.chat_input("Ask a question about the uploaded report...")
         if prompt:
+            # Add user message
             st.session_state.messages.append({"role": "user", "content": prompt})
+            # Get assistant response
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
                     answer = st.session_state.qa_chain.run(prompt)
             st.session_state.messages.append({"role": "assistant", "content": answer})
 
-        # Display chat history (newest to oldest)
-        messages = st.session_state.get("messages", [])
-        # Group messages into user/assistant pairs
-        pairs = []
-        i = 0
-        while i < len(messages):
-            if i+1 < len(messages) and messages[i]["role"] == "user" and messages[i+1]["role"] == "assistant":
-                pairs.append((messages[i], messages[i+1]))
-                i += 2
-            else:
-                # Handle any orphan message (e.g., only user or only assistant)
-                pairs.append((messages[i],))
-                i += 1
-        # Display newest pair first
-        for pair in reversed(pairs):
-            for message in pair:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+        # --- Display chat history (newest to oldest, grouped by user/assistant pairs) ---
+        def display_chat_history(messages):
+            """Display chat history as user/assistant pairs, newest first."""
+            pairs = []
+            i = 0
+            while i < len(messages):
+                if i+1 < len(messages) and messages[i]["role"] == "user" and messages[i+1]["role"] == "assistant":
+                    pairs.append((messages[i], messages[i+1]))
+                    i += 2
+                else:
+                    # Handle any orphan message (e.g., only user or only assistant)
+                    pairs.append((messages[i],))
+                    i += 1
+            # Display newest pair first
+            for pair in reversed(pairs):
+                for message in pair:
+                    with st.chat_message(message["role"]):
+                        st.markdown(message["content"])
+
+        display_chat_history(st.session_state.get("messages", []))
 
 
 
@@ -280,8 +287,3 @@ with col2:
             use_container_width=True,
             icon=":material/download:"
         )
-
-    # # Display chat history
-    # for message in st.session_state.get("messages", []):
-    #     with st.chat_message(message["role"]):
-    #         st.markdown(message["content"])
