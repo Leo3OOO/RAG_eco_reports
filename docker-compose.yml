@@ -1,0 +1,8 @@
+services:
+  streamlit:
+    container_name: "RAG_eco_reports"
+    build:
+      dockerfile: ./Dockerfile
+      context: ./
+    ports:
+      - '8080:8080'
