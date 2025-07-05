@@ -26,15 +26,13 @@ faiss-cpu
 # .env-Dateien laden
 python-dotenv
 
-# Falls du Jupyter oder Visualisierung brauchst (optional)
-jupyter
-matplotlib
-
 # Embeddings and vector store
 sentence-transformers
-pymilvus
 chromadb
 
 #pdf thumbnail generation
 pdf2image
 Pillow
+
+# Speedup and system monitoring
+psutil
