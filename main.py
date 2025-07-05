@@ -7,6 +7,9 @@ import streamlit_pdf_viewer as pdf_viewer
 from pdf2image import convert_from_bytes
 from PIL import Image
 import io
+from custom_prompt import custom_prompt
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationalRetrievalChain
 
 st.set_page_config(layout="wide", page_title="Chat with PDF", page_icon=":material/temp_preferences_eco:")
 st.title(":green[**Eco Report RAG Chat** :material/temp_preferences_eco:]", width="stretch")
@@ -17,6 +20,19 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "past_chats" not in st.session_state:
     st.session_state.past_chats = []
+
+
+def render_pdf_thumbnail(pdf_bytes, preview_width=180):
+    images = convert_from_bytes(pdf_bytes, first_page=1, last_page=1)
+    img = images[0]
+    width, height = img.size
+    aspect_ratio = width / height if height != 0 else 1
+    preview_height = int(preview_width / aspect_ratio)
+    img_resized = img.resize((preview_width, preview_height))
+    buf = io.BytesIO()
+    img_resized.save(buf, format="PNG")
+    buf.seek(0)
+    return buf    
 
 # Sidebar for past chats with mini PDF previews
 def display_past_chats():
@@ -29,10 +45,7 @@ def display_past_chats():
             pdf_bytes = chat.get("pdf_bytes")
             if pdf_bytes:
                 try:
-                    images = convert_from_bytes(pdf_bytes, first_page=1, last_page=1, size=(360, 480))
-                    buf = io.BytesIO()
-                    images[0].save(buf, format="PNG")
-                    buf.seek(0)
+                    buf = render_pdf_thumbnail(pdf_bytes)
                     st.sidebar.image(buf)
                 except Exception as e:
                     st.sidebar.info(f"[Preview error]: {e}")
@@ -141,12 +154,29 @@ with col1:
             use_container_width=True,
             on_click=toggle_pdf_wide
         )
+        # Read the PDF bytes and store in session state
         pdf_bytes = uploaded_file.read()
         st.session_state["pdf_bytes"] = pdf_bytes
-        pdf_viewer.pdf_viewer(pdf_bytes, width="100%", height=pdf_height)
+        file_size_mb = len(pdf_bytes) / (1024 * 1024)
+        if file_size_mb > 47:
+            with open("large_uploaded_file.pdf", "wb") as f:
+                f.write(pdf_bytes)
+            st.warning(f"⚠️Uploaded PDF is {file_size_mb:.2f} MB large. Your browser does not allow embedding large PDFs.")
+            st.image(render_pdf_thumbnail(pdf_bytes), use_container_width=True)
+        else:
+            # Display the PDF using streamlit_pdf_viewer
+            pdf_viewer.pdf_viewer(pdf_bytes, width="100%", height=pdf_height)
         uploaded_file.seek(0)
     elif st.session_state.get("pdf_bytes"):
-        pdf_viewer.pdf_viewer(st.session_state["pdf_bytes"], width="100%", height=pdf_height)
+        file_size_mb = len(st.session_state["pdf_bytes"]) / (1024 * 1024)
+        if file_size_mb > 47:
+            with open("large_uploaded_file.pdf", "wb") as f:
+                f.write(st.session_state["pdf_bytes"])
+            st.warning(f"⚠️Uploaded PDF is {file_size_mb:.2f} MB large. Your browser does not allow embedding large PDFs.")
+            st.image(render_pdf_thumbnail(st.session_state["pdf_bytes"]), use_container_width=True)
+        else:
+            # Display the PDF using streamlit_pdf_viewer
+            pdf_viewer.pdf_viewer(st.session_state["pdf_bytes"], width="100%", height=pdf_height)
 
 with col2:
     if uploaded_file is not None and "retriever" not in st.session_state:
@@ -186,28 +216,54 @@ with col2:
 
     # Only show chat input after retriever/llm are ready
     if "retriever" in st.session_state and "llm" in st.session_state:
+
+        # Set up memory (persisted in session state)
+        if "memory" not in st.session_state:
+            st.session_state.memory = ConversationBufferMemory(
+                memory_key="chat_history",
+                return_messages=True
+            )
+
+        # Build ConversationalRetrievalChain (persisted in session state)
+        if "qa_chain" not in st.session_state:
+            st.session_state.qa_chain = ConversationalRetrievalChain.from_llm(
+                llm=st.session_state["llm"],
+                retriever=st.session_state["retriever"],
+                memory=st.session_state.memory,
+                combine_docs_chain_kwargs={"prompt": custom_prompt},
+            )
+            st.session_state.messages = []
+
+        # Chat input and response (displayed above chat history)
         prompt = st.chat_input("Ask a question about the uploaded report...")
         if prompt:
-            with st.spinner("Thinking..."):
-                # Build chat history as context
-                chat_history = ""
-                for msg in st.session_state.messages:
-                    role = msg["role"]
-                    content = msg["content"]
-                    if role == "user":
-                        chat_history += f"User: {content}\n"
-                    elif role == "assistant":
-                        chat_history += f"Assistant: {content}\n"
-                chat_history += f"User: {prompt}\nAssistant:"
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("assistant"):
+                with st.spinner("Thinking..."):
+                    answer = st.session_state.qa_chain.run(prompt)
+            st.session_state.messages.append({"role": "assistant", "content": answer})
 
-                # Use RetrievalQA with chat history as context
-                qa_chain = working_backend_final.RetrievalQA.from_chain_type(
-                    llm=st.session_state["llm"],
-                    retriever=st.session_state["retriever"]
-                )
-                answer = qa_chain.run(chat_history)
-                st.session_state.messages.append({"role": "user", "content": prompt})
-                st.session_state.messages.append({"role": "assistant", "content": answer})
+        # Display chat history (newest to oldest)
+        messages = st.session_state.get("messages", [])
+        # Group messages into user/assistant pairs
+        pairs = []
+        i = 0
+        while i < len(messages):
+            if i+1 < len(messages) and messages[i]["role"] == "user" and messages[i+1]["role"] == "assistant":
+                pairs.append((messages[i], messages[i+1]))
+                i += 2
+            else:
+                # Handle any orphan message (e.g., only user or only assistant)
+                pairs.append((messages[i],))
+                i += 1
+        # Display newest pair first
+        for pair in reversed(pairs):
+            for message in pair:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
+
+
+
         # Download JSON button (now works regardless of scope)
         llm = st.session_state["llm"]
         retriever = st.session_state["retriever"]
@@ -225,7 +281,7 @@ with col2:
             icon=":material/download:"
         )
 
-    # Display chat history
-    for message in st.session_state.get("messages", []):
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    # # Display chat history
+    # for message in st.session_state.get("messages", []):
+    #     with st.chat_message(message["role"]):
+    #         st.markdown(message["content"])
