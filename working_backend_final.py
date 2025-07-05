@@ -154,7 +154,7 @@ def set_llm():
     return ChatOpenAI(
         api_key=api_key,
         base_url="https://chat-ai.academiccloud.de/v1",
-        model="meta-llama-3.1-8b-rag", # choosing model 
+        model="llama-3.1-sauerkrautlm-70b-instruct", # choosing model 
         temperature=0.4 # lowering temperature to reduce randomness
     )
 
