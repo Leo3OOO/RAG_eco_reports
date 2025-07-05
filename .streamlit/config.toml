@@ -13,9 +13,11 @@ weight=700
 
 [theme]
 font="noto-sans"
-primaryColor="#0b5b49"
-backgroundColor="#fff8e7"
-secondaryBackgroundColor="#f5e99d"
+primaryColor="#436354"
+backgroundColor="#F5F4ED"
+secondaryBackgroundColor="#00000"
 
 [theme.sidebar]
-primaryColor="darkGoldrod"
+primaryColor="#D4A37F"
+seconda
+backgroundColor="#ECEAE1"
