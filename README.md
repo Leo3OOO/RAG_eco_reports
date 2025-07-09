@@ -7,7 +7,9 @@
 1. **Repository klonen**  
 Klone unser Git-Repository in einen gewünschten Ordner und navigiere anschließend in diesen Ordner:
 
-  ```bash cd "folder_name" ```
+  ```bash 
+  cd "folder_name" 
+  ```
 
 2.	**Setup (für Mac oder Linux)**
 Führe im Terminal (im gewählten Ordner) folgende Befehle aus:
@@ -50,7 +52,9 @@ Speichere anschließend die Datei.
 ### 🚀 Schritte zum Ausführen der Datei (aktuelle Nutzung)
 	1.	Im Terminal zu dem Passenden Ordner navigieren
 	2.	Folgenden Befehl im Terminal ausführen:
-```bash streamlit run main.py```
+	```bash 
+	streamlit run main.py
+	```
 
 ### 🔁 Wiederholte Benutzung
 
@@ -58,9 +62,13 @@ Wenn du das Projekt erneut öffnen möchtest, musst du das Virtual Environment n
 	1.	Terminal in den passenden Ordner leiten
 	2.	Virtual Environment aktivieren und Code ausführen:
 
-```bash source newenv/bin/activate```
+	```bash 
+	source newenv/bin/activate
+	```
 
-```bash streamlit run main.py```
+	```bash 
+	streamlit run main.py
+	```
 
 ### 🐳 Nutzung mit Docker
 
