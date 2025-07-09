@@ -50,7 +50,7 @@ Speichere anschließend die Datei.
 ### 🚀 Schritte zum Ausführen der Datei (aktuelle Nutzung)
 	1.	Im Terminal zu dem Passenden Ordner navigieren
 	2.	Folgenden Befehl im Terminal ausführen:
-```streamlit run main.py```
+```bash streamlit run main.py```
 
 ### 🔁 Wiederholte Benutzung
 
@@ -58,8 +58,9 @@ Wenn du das Projekt erneut öffnen möchtest, musst du das Virtual Environment n
 	1.	Terminal in den passenden Ordner leiten
 	2.	Virtual Environment aktivieren und Code ausführen:
 
-```source newenv/bin/activate```
-```streamlit run main.py```
+```bash source newenv/bin/activate```
+
+```bash streamlit run main.py```
 
 ### 🐳 Nutzung mit Docker
 
