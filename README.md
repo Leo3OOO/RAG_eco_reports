@@ -22,7 +22,9 @@ Führe im Terminal (im gewählten Ordner) folgende Befehle aus:
 	./setup_env.sh
 	```
 
-- ```source newenv/bin/activate```
+	```bash
+	newenv/bin/activate
+	```
 
 
    > **Hinweis:** Falls du PDFs verarbeiten möchtest, installiere Poppler lokal (nur notwendig bei Nutzung ohne Docker):
@@ -52,6 +54,7 @@ Speichere anschließend die Datei.
 ### 🚀 Schritte zum Ausführen der Datei (aktuelle Nutzung)
 	1.	Im Terminal zu dem Passenden Ordner navigieren
 	2.	Folgenden Befehl im Terminal ausführen:
+
 	```bash 
 	streamlit run main.py
 	```
@@ -64,9 +67,6 @@ Wenn du das Projekt erneut öffnen möchtest, musst du das Virtual Environment n
 
 	```bash 
 	source newenv/bin/activate
-	```
-
-	```bash 
 	streamlit run main.py
 	```
 
