@@ -172,6 +172,22 @@ def set_llm():
         streaming=True
     )
 
+
+# initialising llm
+def set_json_llm():
+    load_dotenv()
+    api_key = os.getenv("API_KEY")
+    if api_key is not None:
+        from pydantic import SecretStr
+        api_key = SecretStr(api_key)
+    return ChatOpenAI(
+        api_key=api_key,
+        base_url="https://chat-ai.academiccloud.de/v1",
+        model="meta-llama-3.1-8b-rag", # choosing model
+        temperature=0.4,  # lowering temperature to reduce randomness
+        streaming=True
+    )
+
 # extracting info and creating json
 def extract_info_as_json(llm, retriever, pdf_name):
     """Extract structured info from the PDF using RAG and return JSON."""
